@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+{% block title %}Order{% endblock title %}
+{% load cart_filter %}
+{% block content %}
+<div class="container-fluid">
+
+
+         <table  class="table table-success table-striped " style="text-align:center;border:5px solid green">
+    <tr border=2 >
+        <th>Sno.</th>
+        <th>Product Image</th>
+        <th>Product Name</th>
+        <th>Price</th>
+        <th>Quantity</th>
+        <th>Total Price</th>
+        <th>Status</th>
+    </tr>
+    {% for pro in fetch_dtls %}
+    <tr>
+        <td>{{forloop.counter}}</td>
+        <td><img src="{{pro.product.product_image.url}}" alt="" height=90 width=90 ></td>
+        <td>{{pro.product.product_name}}</td>
+        <td>Rs. {{pro.price}}</td>
+        <td> {{pro.quantity}}</td>
+        <td> Rs.{{pro.price|order_amount:pro.quantity}}</td>
+        
+        {% if pro.status %}
+            <td> <span class="badge text-bg-success"><h6>Accepted</h6></span>
+        {% else %}
+        <td> <span class="badge text-bg-warning"><h5>Pending</h5></span>
+        {% endif %}
+        
+</td>
+    </tr>
+  
+
+
+    {% endfor %}
+      <tr>
+        <td colspan = 5>
+            <h3>
+                Payable Amount:-
+            </h3>
+        </td>
+        <td>  
+            <strong>
+                     Rs. {{tp}}
+            </strong>
+           
+        
+        </td>
+         <td>
+           <span class="badge " id="paypal-button-container" style= "width:70%"></span>
+     </td>
+    </tr>
+   
+    </table>
+</div>
+
+  <!-- Include the PayPal JavaScript SDK -->
+    <script src="https://www.paypal.com/sdk/js?client-id=AcH53-Nqt6YAUP5QYMIFp7-N9txy4fsMWbmdqe3q2C9ivcGM92aM_evC3onvguYYWxGWh4TQCKAgRcnr&currency=USD"></script>
+ 
+    <div id="paypal-button-container"></div>
+    <script>
+        // Render the PayPal button into #paypal-button-container
+        paypal.Buttons({
+
+            // Set up the transaction
+            createOrder: function(data, actions) {
+                return actions.order.create({
+                    purchase_units: [{
+                        amount: {
+                            value: '{{tp}}'
+                        }
+                    }]
+                });
+            },
+
+            // Finalize the transaction
+            onApprove: function(data, actions) {
+                return actions.order.capture().then(function(orderData) {
+                    // Successful capture! For demo purposes:
+                    console.log('Capture result', orderData, JSON.stringify(orderData, null, 2));
+                    var transaction = orderData.purchase_units[0].payments.captures[0];
+                    alert('Transaction '+ transaction.status + ': ' + transaction.id + '\n\nSee console for all available details');
+
+                    // Replace the above to show a success message within this page, e.g.
+                    // const element = document.getElementById('paypal-button-container');
+                    // element.innerHTML = '';
+                    // element.innerHTML = '<h3>Thank you for your payment!</h3>';
+                    // Or go to another URL:  actions.redirect('thank_you.html');
+                });
+            }
+
+
+        }).render('#paypal-button-container');
+    </script>
+{% endblock content %}
